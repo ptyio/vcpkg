@@ -1,4 +1,4 @@
-set(VCPKG_TARGET_ARCHITECTURE arm64)
+set(VCPKG_TARGET_ARCHITECTURE arm)
 set(VCPKG_CRT_LINKAGE dynamic)
 set(VCPKG_LIBRARY_LINKAGE static)
 
@@ -11,5 +11,5 @@ endif()
 set(VCPKG_BUILD_TYPE release)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE $ENV{ARM_LINUX_CHAINLOAD_PATH}/arm-linux-toolchain.cmake)
 
-set(VCPKG_ARM_LINUX_SYSROOT /opt/cos7-arm64-rootfs)
-set(VCPKG_ARM_LINUX_TOOLCHAIN /opt/cos7-arm64-toolchain)
+set(VCPKG_ARM_LINUX_SYSROOT /opt/cos7-armv7a-rootfs)
+set(VCPKG_ARM_LINUX_TOOLCHAIN /opt/cos7-armv7a-toolchain)

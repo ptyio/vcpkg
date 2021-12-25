@@ -90,7 +90,7 @@ function(install_qt)
             LOGNAME build-${_build_triplet}
         )
 
-        if(VCPKG_TARGET_IS_OSX)
+        if(VCPKG_TARGET_IS_OSX OR VCPKG_TARGET_IS_IOS)
            # For some reason there will be an error on MacOSX without this clean!
             message(STATUS "Cleaning after build before install ${_build_triplet}")
             vcpkg_execute_required_process(

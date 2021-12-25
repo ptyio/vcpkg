@@ -1,0 +1,10 @@
+diff --git a/src/src.pro b/src/src.pro
+index b5d9d1b..6f87ff9 100644
+--- a/src/src.pro
++++ b/src/src.pro
+@@ -3,5 +3,4 @@ CONFIG += ordered
+
+ qtConfig(textcodec) {
+     SUBDIRS += websockets
+-    qtHaveModule(quick): SUBDIRS += imports
+ }

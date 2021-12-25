@@ -1,10 +1,17 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO kafeg/ptyqt
-    REF 0.6.5
-    SHA512 0deb12be6c0e7bb44775daef3d4361c5d22143bc32cbf251ef99f10784b8996c4aa8e2806f1e08c3b39749ada6e85be91d721830ceee5d6ff86eaf714ef4c928
+    REF 0.7.1
+    SHA512 fe24dcbc3f7f94af2af5b47e78090ef1557626921012e9b5ec44334ea10873374df17e43c76b34e1693f26f40b0d20020c11bc1369a565ccb6f49bfce054c7b9
     HEAD_REF master
 )
+
+#if(VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
+#    vcpkg_apply_patches(
+#        SOURCE_PATH ${SOURCE_PATH}
+#        PATCHES fix-automoc-on-cross-win.patch
+#    )
+#endif()
 
 if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(VCPKG_CXX_FLAGS "${VCPKG_CXX_FLAGS} -lrt")

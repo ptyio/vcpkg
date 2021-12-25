@@ -7,7 +7,11 @@ function(vcpkg_configure_qmake)
     )
 
     # Find qmake executable
-    find_program(qmake_executable NAMES qmake PATHS "${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin" NO_DEFAULT_PATH)
+    if(VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
+        find_program(qmake_executable NAMES qmake PATHS "${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin" NO_DEFAULT_PATH)
+    else()
+        find_program(qmake_executable NAMES qmake PATHS "${CURRENT_INSTALLED_DIR}/tools/qt5/bin" NO_DEFAULT_PATH)
+    endif()
 
     if(NOT qmake_executable)
         message(FATAL_ERROR "vcpkg_configure_qmake: unable to find qmake.")

@@ -8,12 +8,7 @@
   "dependencies": [
     "double-conversion",
     "egl-registry",
-    {
-      "name": "fontconfig",
-      "platform": "!windows"
-    },
     "freetype",
-    "harfbuzz",
     "libjpeg-turbo",
     "libpng",
     {
@@ -25,7 +20,8 @@
     {
       "name": "qt5-base",
       "host": true,
-      "default-features": false
+      "default-features": false,
+	    "platform": "windows"
     },
     "sqlite3",
     {
