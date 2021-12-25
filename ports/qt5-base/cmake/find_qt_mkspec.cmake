@@ -23,7 +23,11 @@ function(find_qt_mkspec TARGET_PLATFORM_MKSPEC_OUT HOST_PLATFORM_MKSPEC_OUT EXT_
                 endif()
             endif()
         elseif(VCPKG_TARGET_IS_LINUX)
-            set(_tmp_targ_out "linux-g++" )
+            if (${TARGET_TRIPLET} STREQUAL "x86-linux")
+                set(_tmp_targ_out "linux-g++-32" )
+            else()
+                set(_tmp_targ_out "linux-g++" )
+            endif()
         elseif(VCPKG_TARGET_IS_OSX)
             set(_tmp_targ_out "macx-clang") # switch to macx-g++ since vcpkg requires g++ to compile any way? 
         endif()

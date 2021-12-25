@@ -36,6 +36,10 @@ else()
     )
 endif()
 
+if(VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
+    list(APPEND PATCHES patches/qt-cross-arm64-windows.patch)
+endif()
+
 set(WITH_PGSQL_PLUGIN OFF)
 if("postgresqlplugin" IN_LIST FEATURES)
     set(WITH_PGSQL_PLUGIN ON)
@@ -66,6 +70,11 @@ if(DEFINED HOST_TOOLS)
     list(APPEND QT_PLATFORM_CONFIGURE_OPTIONS HOST_TOOLS_ROOT ${HOST_TOOLS})
 endif()
 
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+
 #########################
 ## Downloading Qt5-Base
 
@@ -75,7 +84,7 @@ qt_download_submodule(  OUT_SOURCE_PATH SOURCE_PATH
                             patches/windows_prf.patch          #fixes the qtmain dependency due to the above move
                             patches/qt_app.patch               #Moves the target location of qt5 host apps to always install into the host dir.
                             patches/gui_configure.patch        #Patches the gui configure.json to break freetype/fontconfig autodetection because it does not include its dependencies.
-                            patches/icu.patch                  #Help configure find static icu builds in vcpkg on windows
+                            #patches/icu.patch                  #Help configure find static icu builds in vcpkg on windows
                             patches/xlib.patch                 #Patches Xlib check to actually use Pkgconfig instead of makeSpec only
                             patches/egl.patch                  #Fix egl detection logic.
                             patches/zstdd.patch                #Fix detection of zstd in debug builds
@@ -92,7 +101,7 @@ qt_download_submodule(  OUT_SOURCE_PATH SOURCE_PATH
                     )
 
 # Remove vendored dependencies to ensure they are not picked up by the build
-foreach(DEPENDENCY zlib freetype harfbuzz-ng libjpeg libpng double-conversion sqlite pcre2)
+foreach(DEPENDENCY freetype harfbuzz-ng libjpeg libpng double-conversion sqlite pcre2)
     if(EXISTS ${SOURCE_PATH}/src/3rdparty/${DEPENDENCY})
         file(REMOVE_RECURSE ${SOURCE_PATH}/src/3rdparty/${DEPENDENCY})
     endif()
@@ -126,8 +135,8 @@ list(APPEND CORE_OPTIONS
     -system-pcre
     -system-doubleconversion
     -system-sqlite
-    -system-harfbuzz
-    -icu
+    -no-harfbuzz
+    -no-icu
     -no-vulkan
     -no-angle # Qt does not need to build angle. VCPKG will build angle!
     -no-glib
@@ -178,8 +187,8 @@ find_library(FREETYPE_RELEASE NAMES freetype PATHS "${CURRENT_INSTALLED_DIR}/lib
 find_library(FREETYPE_DEBUG NAMES freetype freetyped PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 find_library(DOUBLECONVERSION_RELEASE NAMES double-conversion PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
 find_library(DOUBLECONVERSION_DEBUG NAMES double-conversion PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
-find_library(HARFBUZZ_RELEASE NAMES harfbuzz PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(HARFBUZZ_DEBUG NAMES harfbuzz PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(HARFBUZZ_RELEASE NAMES harfbuzz PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(HARFBUZZ_DEBUG NAMES harfbuzz PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 find_library(SQLITE_RELEASE NAMES sqlite3 PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH) # Depends on openssl and zlib(linux)
 find_library(SQLITE_DEBUG NAMES sqlite3 sqlite3d PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 
@@ -188,30 +197,30 @@ find_library(BROTLI_COMMON_DEBUG NAMES brotlicommon brotlicommon-static brotlico
 find_library(BROTLI_DEC_RELEASE NAMES brotlidec brotlidec-static PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
 find_library(BROTLI_DEC_DEBUG NAMES brotlidec brotlidec-static brotlidecd brotlidec-staticd PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 
-find_library(ICUUC_RELEASE NAMES icuuc libicuuc PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(ICUUC_DEBUG NAMES icuucd libicuucd icuuc libicuuc PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
-find_library(ICUTU_RELEASE NAMES icutu libicutu PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(ICUTU_DEBUG NAMES icutud libicutud icutu libicutu PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(ICUUC_RELEASE NAMES icuuc libicuuc PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(ICUUC_DEBUG NAMES icuucd libicuucd icuuc libicuuc PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(ICUTU_RELEASE NAMES icutu libicutu PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(ICUTU_DEBUG NAMES icutud libicutud icutu libicutu PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 
 # Was installed in WSL but not on CI machine
 #    find_library(ICULX_RELEASE NAMES iculx libiculx PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
 #    find_library(ICULX_DEBUG NAMES iculxd libiculxd iculx libiculx PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 
-find_library(ICUIO_RELEASE NAMES icuio libicuio PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(ICUIO_DEBUG NAMES icuiod libicuiod icuio libicuio PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
-find_library(ICUIN_RELEASE NAMES icui18n libicui18n icuin PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(ICUIN_DEBUG NAMES icui18nd libicui18nd icui18n libicui18n icuin icuind PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
-find_library(ICUDATA_RELEASE NAMES icudata libicudata icudt PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(ICUDATA_DEBUG NAMES icudatad libicudatad icudata libicudata icudtd PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
-set(ICU_RELEASE "${ICUIN_RELEASE} ${ICUTU_RELEASE} ${ICULX_RELEASE} ${ICUUC_RELEASE} ${ICUIO_RELEASE} ${ICUDATA_RELEASE}")
-set(ICU_DEBUG "${ICUIN_DEBUG} ${ICUTU_DEBUG} ${ICULX_DEBUG} ${ICUUC_DEBUG} ${ICUIO_DEBUG} ${ICUDATA_DEBUG}")
-if(VCPKG_TARGET_IS_WINDOWS)
-    set(ICU_RELEASE "${ICU_RELEASE} Advapi32.lib")
-    set(ICU_DEBUG "${ICU_DEBUG} Advapi32.lib" )
-endif()
+#find_library(ICUIO_RELEASE NAMES icuio libicuio PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(ICUIO_DEBUG NAMES icuiod libicuiod icuio libicuio PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(ICUIN_RELEASE NAMES icui18n libicui18n icuin PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(ICUIN_DEBUG NAMES icui18nd libicui18nd icui18n libicui18n icuin icuind PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(ICUDATA_RELEASE NAMES icudata libicudata icudt PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(ICUDATA_DEBUG NAMES icudatad libicudatad icudata libicudata icudtd PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#set(ICU_RELEASE "${ICUIN_RELEASE} ${ICUTU_RELEASE} ${ICULX_RELEASE} ${ICUUC_RELEASE} ${ICUIO_RELEASE} ${ICUDATA_RELEASE}")
+#set(ICU_DEBUG "${ICUIN_DEBUG} ${ICUTU_DEBUG} ${ICULX_DEBUG} ${ICUUC_DEBUG} ${ICUIO_DEBUG} ${ICUDATA_DEBUG}")
+#if(VCPKG_TARGET_IS_WINDOWS)
+#    set(ICU_RELEASE "${ICU_RELEASE} Advapi32.lib")
+#    set(ICU_DEBUG "${ICU_DEBUG} Advapi32.lib" )
+#endif()
 
-find_library(FONTCONFIG_RELEASE NAMES fontconfig PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
-find_library(FONTCONFIG_DEBUG NAMES fontconfig PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
+#find_library(FONTCONFIG_RELEASE NAMES fontconfig PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+#find_library(FONTCONFIG_DEBUG NAMES fontconfig PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 find_library(EXPAT_RELEASE NAMES expat PATHS "${CURRENT_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
 find_library(EXPAT_DEBUG NAMES expat PATHS "${CURRENT_INSTALLED_DIR}/debug/lib" NO_DEFAULT_PATH)
 
@@ -229,7 +238,7 @@ set(FREETYPE_RELEASE_ALL "${FREETYPE_RELEASE} ${BZ2_RELEASE} ${LIBPNG_RELEASE} $
 set(FREETYPE_DEBUG_ALL "${FREETYPE_DEBUG} ${BZ2_DEBUG} ${LIBPNG_DEBUG} ${ZLIB_DEBUG} ${BROTLI_DEC_DEBUG} ${BROTLI_COMMON_DEBUG}")
 
 # If HarfBuzz is built with GLib enabled, it must be statically link
-x_vcpkg_pkgconfig_get_modules(PREFIX harfbuzz MODULES harfbuzz LIBRARIES)
+#x_vcpkg_pkgconfig_get_modules(PREFIX harfbuzz MODULES harfbuzz LIBRARIES)
 
 set(RELEASE_OPTIONS
             "LIBJPEG_LIBS=${JPEG_RELEASE}"
@@ -237,10 +246,10 @@ set(RELEASE_OPTIONS
             "LIBPNG_LIBS=${LIBPNG_RELEASE} ${ZLIB_RELEASE}"
             "PCRE2_LIBS=${PCRE2_RELEASE}"
             "FREETYPE_LIBS=${FREETYPE_RELEASE_ALL}"
-            "ICU_LIBS=${ICU_RELEASE}"
+            #"ICU_LIBS=${ICU_RELEASE}"
             "QMAKE_LIBS_PRIVATE+=${BZ2_RELEASE}"
             "QMAKE_LIBS_PRIVATE+=${LIBPNG_RELEASE}"
-            "QMAKE_LIBS_PRIVATE+=${ICU_RELEASE}"
+            #"QMAKE_LIBS_PRIVATE+=${ICU_RELEASE}"
             "QMAKE_LIBS_PRIVATE+=${ZSTD_RELEASE}"
             )
 set(DEBUG_OPTIONS
@@ -249,10 +258,10 @@ set(DEBUG_OPTIONS
             "LIBPNG_LIBS=${LIBPNG_DEBUG} ${ZLIB_DEBUG}"
             "PCRE2_LIBS=${PCRE2_DEBUG}"
             "FREETYPE_LIBS=${FREETYPE_DEBUG_ALL}"
-            "ICU_LIBS=${ICU_DEBUG}"
+            #"ICU_LIBS=${ICU_DEBUG}"
             "QMAKE_LIBS_PRIVATE+=${BZ2_DEBUG}"
             "QMAKE_LIBS_PRIVATE+=${LIBPNG_DEBUG}"
-            "QMAKE_LIBS_PRIVATE+=${ICU_DEBUG}"
+            #"QMAKE_LIBS_PRIVATE+=${ICU_DEBUG}"
             "QMAKE_LIBS_PRIVATE+=${ZSTD_DEBUG}"
             )
 
@@ -267,13 +276,13 @@ if(VCPKG_TARGET_IS_WINDOWS)
     endif()
     list(APPEND RELEASE_OPTIONS
             "SQLITE_LIBS=${SQLITE_RELEASE}"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE}"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE}"
             "OPENSSL_LIBS=${SSL_RELEASE} ${EAY_RELEASE} ws2_32.lib secur32.lib advapi32.lib shell32.lib crypt32.lib user32.lib gdi32.lib"
         )
 
     list(APPEND DEBUG_OPTIONS
             "SQLITE_LIBS=${SQLITE_DEBUG}"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG}"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG}"
             "OPENSSL_LIBS=${SSL_DEBUG} ${EAY_DEBUG} ws2_32.lib secur32.lib advapi32.lib shell32.lib crypt32.lib user32.lib gdi32.lib"
         )
     if(WITH_PGSQL_PLUGIN)
@@ -286,33 +295,38 @@ if(VCPKG_TARGET_IS_WINDOWS)
     endif(WITH_MYSQL_PLUGIN)
 
 elseif(VCPKG_TARGET_IS_LINUX)
-    list(APPEND CORE_OPTIONS -fontconfig -xcb-xlib -xcb -linuxfb)
+    if (${TARGET_TRIPLET} STREQUAL "x86-linux")
+        list(APPEND CORE_OPTIONS -no-fontconfig -no-xcb-xlib -no-xcb -linuxfb)
+    else()
+        list(APPEND CORE_OPTIONS -no-fontconfig -xcb-xlib -xcb -linuxfb)
+    endif()
     if (NOT EXISTS "/usr/include/GL/glu.h")
         message(FATAL_ERROR "qt5 requires libgl1-mesa-dev and libglu1-mesa-dev, please use your distribution's package manager to install them.\nExample: \"apt-get install libgl1-mesa-dev libglu1-mesa-dev\"")
     endif()
     list(APPEND RELEASE_OPTIONS
             "SQLITE_LIBS=${SQLITE_RELEASE} -ldl -lpthread"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE}"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE}"
             "OPENSSL_LIBS=${SSL_RELEASE} ${EAY_RELEASE} -ldl -lpthread"
-            "FONTCONFIG_LIBS=${FONTCONFIG_RELEASE} ${FREETYPE_RELEASE} ${EXPAT_RELEASE} -luuid"
+            #"FONTCONFIG_LIBS=${FONTCONFIG_RELEASE} ${FREETYPE_RELEASE} ${EXPAT_RELEASE} -luuid"
         )
     list(APPEND DEBUG_OPTIONS
             "SQLITE_LIBS=${SQLITE_DEBUG} -ldl -lpthread"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG}"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG}"
             "OPENSSL_LIBS=${SSL_DEBUG} ${EAY_DEBUG} -ldl -lpthread"
-            "FONTCONFIG_LIBS=${FONTCONFIG_DEBUG} ${FREETYPE_DEBUG} ${EXPAT_DEBUG} -luuid"
+            #"FONTCONFIG_LIBS=${FONTCONFIG_DEBUG} ${FREETYPE_DEBUG} ${EXPAT_DEBUG} -luuid"
         )
     if(WITH_PGSQL_PLUGIN)
         list(APPEND RELEASE_OPTIONS "PSQL_LIBS=${PSQL_RELEASE} ${PSQL_PORT_RELEASE} ${PSQL_TYPES_RELEASE} ${PSQL_COMMON_RELEASE} ${SSL_RELEASE} ${EAY_RELEASE} -ldl -lpthread")
         list(APPEND DEBUG_OPTIONS "PSQL_LIBS=${PSQL_DEBUG} ${PSQL_PORT_DEBUG} ${PSQL_TYPES_DEBUG} ${PSQL_COMMON_DEBUG} ${SSL_DEBUG} ${EAY_DEBUG} -ldl -lpthread")
     endif()
 elseif(VCPKG_TARGET_IS_OSX)
-    list(APPEND CORE_OPTIONS -fontconfig)
-    if("${VCPKG_TARGET_ARCHITECTURE}" MATCHES "arm64")
-        FILE(READ "${SOURCE_PATH}/mkspecs/common/macx.conf" _tmp_contents)
-        string(REPLACE "QMAKE_APPLE_DEVICE_ARCHS = x86_64" "QMAKE_APPLE_DEVICE_ARCHS = arm64" _tmp_contents ${_tmp_contents})
-        FILE(WRITE "${SOURCE_PATH}/mkspecs/common/macx.conf" ${_tmp_contents})
-    endif()
+    list(APPEND CORE_OPTIONS -no-fontconfig)
+	# disable for cross build
+    #if("${VCPKG_TARGET_ARCHITECTURE}" MATCHES "arm64")
+    #    FILE(READ "${SOURCE_PATH}/mkspecs/common/macx.conf" _tmp_contents)
+    #    string(REPLACE "QMAKE_APPLE_DEVICE_ARCHS = x86_64" "QMAKE_APPLE_DEVICE_ARCHS = arm64" _tmp_contents ${_tmp_contents})
+    #    FILE(WRITE "${SOURCE_PATH}/mkspecs/common/macx.conf" ${_tmp_contents})
+    #endif()
     if(DEFINED VCPKG_OSX_DEPLOYMENT_TARGET)
         set(ENV{QMAKE_MACOSX_DEPLOYMENT_TARGET} ${VCPKG_OSX_DEPLOYMENT_TARGET})
     else()
@@ -346,15 +360,15 @@ elseif(VCPKG_TARGET_IS_OSX)
     #list(APPEND QT_PLATFORM_CONFIGURE_OPTIONS HOST_PLATFORM ${TARGET_MKSPEC})
     list(APPEND RELEASE_OPTIONS
             "SQLITE_LIBS=${SQLITE_RELEASE} -ldl -lpthread"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE} -framework ApplicationServices"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_RELEASE} -framework ApplicationServices"
             "OPENSSL_LIBS=${SSL_RELEASE} ${EAY_RELEASE} -ldl -lpthread"
-            "FONTCONFIG_LIBS=${FONTCONFIG_RELEASE} ${FREETYPE_RELEASE} ${EXPAT_RELEASE} -liconv"
+            #"FONTCONFIG_LIBS=${FONTCONFIG_RELEASE} ${FREETYPE_RELEASE} ${EXPAT_RELEASE} -liconv"
         )
     list(APPEND DEBUG_OPTIONS
             "SQLITE_LIBS=${SQLITE_DEBUG} -ldl -lpthread"
-            "HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG} -framework ApplicationServices"
+            #"HARFBUZZ_LIBS=${harfbuzz_LIBRARIES_DEBUG} -framework ApplicationServices"
             "OPENSSL_LIBS=${SSL_DEBUG} ${EAY_DEBUG} -ldl -lpthread"
-            "FONTCONFIG_LIBS=${FONTCONFIG_DEBUG} ${FREETYPE_DEBUG} ${EXPAT_DEBUG} -liconv"
+            #"FONTCONFIG_LIBS=${FONTCONFIG_DEBUG} ${FREETYPE_DEBUG} ${EXPAT_DEBUG} -liconv"
         )
 
     if(WITH_PGSQL_PLUGIN)
@@ -379,6 +393,30 @@ else()
         OPTIONS_DEBUG ${DEBUG_OPTIONS}
         )
     install_qt()
+	
+	# dirty hack for win-arm64 cross compile
+    if(VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
+	    message(STATUS "arm64-windows copy executables")
+		#qt5-base
+        file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin/moc.exe)
+	    file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin/rcc.exe)
+	    file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin/qmake.exe)
+        file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/moc.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin)
+	    file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/rcc.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin)
+	    file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/qmake.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin)
+		#qt5
+		file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/qt5/bin/moc.exe)
+	    file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/qt5/bin/rcc.exe)
+	    file(REMOVE ${CURRENT_PACKAGES_DIR}/tools/qt5/bin/qmake.exe)
+        file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/moc.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/qt5/bin)
+	    file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/rcc.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/qt5/bin)
+	    file(COPY ${CURRENT_HOST_INSTALLED_DIR}/tools/qt5/bin/qmake.exe DESTINATION ${CURRENT_PACKAGES_DIR}/tools/qt5/bin)
+    endif()
+    
+    #if (${TARGET_TRIPLET} STREQUAL "arm-linux" OR ${TARGET_TRIPLET} STREQUAL "arm64-linux")
+    #    file(INSTALL ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/lib DESTINATION ${CURRENT_PACKAGES_DIR})
+    #    file(INSTALL ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/include DESTINATION ${CURRENT_PACKAGES_DIR}/include RENAME qt5)
+    #endif()
 
     #########################
     #TODO: Make this a function since it is also done by modular scripts!

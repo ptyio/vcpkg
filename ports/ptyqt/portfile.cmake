@@ -6,6 +6,13 @@ vcpkg_from_github(
     HEAD_REF master
 )
 
+#if(VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
+#    vcpkg_apply_patches(
+#        SOURCE_PATH ${SOURCE_PATH}
+#        PATCHES fix-automoc-on-cross-win.patch
+#    )
+#endif()
+
 if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(VCPKG_CXX_FLAGS "${VCPKG_CXX_FLAGS} -lrt")
     set(VCPKG_C_FLAGS "${VCPKG_C_FLAGS} -lrt")
