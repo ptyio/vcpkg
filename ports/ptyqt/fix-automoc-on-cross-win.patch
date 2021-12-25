@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1e21aa0..a6ec68e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,7 +4,7 @@ project(ptyqt VERSION 0.6.5 LANGUAGES CXX)
+
+ set(CMAKE_CXX_STANDARD 11)
+ set(CMAKE_INCLUDE_CURRENT_DIR ON)
+-set(CMAKE_AUTOMOC ON)
++#set(CMAKE_AUTOMOC ON)
+
+ #params
+ #available params:
