@@ -6,22 +6,9 @@
   "homepage": "https://www.qt.io/",
   "license": null,
   "dependencies": [
-    {
-      "name": "angle",
-      "platform": "!windows"
-    },
     "double-conversion",
     "egl-registry",
-    {
-      "name": "fontconfig",
-      "platform": "!windows"
-    },
     "freetype",
-    "harfbuzz",
-    {
-      "name": "icu",
-      "platform": "!uwp"
-    },
     "libjpeg-turbo",
     "libpng",
     "openssl",
@@ -29,7 +16,8 @@
     {
       "name": "qt5-base",
       "host": true,
-      "default-features": false
+      "default-features": false,
+	  "platform": "windows"
     },
     "sqlite3",
     {
